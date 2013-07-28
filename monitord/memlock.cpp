@@ -19,7 +19,7 @@ int memLockCreate( int key, MEMLOCK *s)
     *s = CreateSemaphore( NULL, 1, 1, semname);
     return (*s != NULL)? 0 : -1;
 #else
-    *s = semget( key, 1, IPC_CREAT|0600);
+    *s = semget( key, 1, IPC_CREAT);
     if (*s > 0) memUnlock( *s);
     return (*s >= 0)? 0 : -1;
 #endif

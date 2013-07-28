@@ -268,7 +268,7 @@ struct SimpleGlobBase
 {
     SimpleGlobBase() : m_hFind(INVALID_HANDLE_VALUE) { }
 
-    int FindFirstFileS(const char * a_pszFileSpec, unsigned int) {
+    int this->FindFirstFileS(const char * a_pszFileSpec, unsigned int) {
         m_hFind = FindFirstFileA(a_pszFileSpec, &m_oFindDataA);
         if (m_hFind != INVALID_HANDLE_VALUE) {
             return SG_SUCCESS;
@@ -279,7 +279,7 @@ struct SimpleGlobBase
         }
         return SG_ERR_FAILURE;
     }
-    int FindFirstFileS(const wchar_t * a_pszFileSpec, unsigned int) {
+    int this->FindFirstFileS(const wchar_t * a_pszFileSpec, unsigned int) {
         m_hFind = FindFirstFileW(a_pszFileSpec, &m_oFindDataW);
         if (m_hFind != INVALID_HANDLE_VALUE) {
             return SG_SUCCESS;
@@ -291,10 +291,10 @@ struct SimpleGlobBase
         return SG_ERR_FAILURE;
     }
 
-    bool FindNextFileS(char) {
+    bool this->FindNextFileS(char) {
         return FindNextFileA(m_hFind, &m_oFindDataA) != FALSE;
     }
-    bool FindNextFileS(wchar_t) {
+    bool this->FindNextFileS(wchar_t) {
         return FindNextFileW(m_hFind, &m_oFindDataW) != FALSE;
     }
 
@@ -302,27 +302,27 @@ struct SimpleGlobBase
         FindClose(m_hFind);
     }
 
-    const char * GetFileNameS(char) const {
+    const char * this->GetFileNameS(char) const {
         return m_oFindDataA.cFileName;
     }
-    const wchar_t * GetFileNameS(wchar_t) const {
+    const wchar_t * this->GetFileNameS(wchar_t) const {
         return m_oFindDataW.cFileName;
     }
 
-    bool IsDirS(char) const {
-        return GetFileTypeS(m_oFindDataA.dwFileAttributes) == SG_FILETYPE_DIR;
+    bool this->IsDirS(char) const {
+        return this->GetFileTypeS(m_oFindDataA.dwFileAttributes) == SG_FILETYPE_DIR;
     }
-    bool IsDirS(wchar_t) const {
-        return GetFileTypeS(m_oFindDataW.dwFileAttributes) == SG_FILETYPE_DIR;
+    bool this->IsDirS(wchar_t) const {
+        return this->GetFileTypeS(m_oFindDataW.dwFileAttributes) == SG_FILETYPE_DIR;
     }
 
-    SG_FileType GetFileTypeS(const char * a_pszPath) {
-        return GetFileTypeS(GetFileAttributesA(a_pszPath));
+    SG_FileType this->GetFileTypeS(const char * a_pszPath) {
+        return this->GetFileTypeS(GetFileAttributesA(a_pszPath));
     }
-    SG_FileType GetFileTypeS(const wchar_t * a_pszPath)  {
-        return GetFileTypeS(GetFileAttributesW(a_pszPath));
+    SG_FileType this->GetFileTypeS(const wchar_t * a_pszPath)  {
+        return this->GetFileTypeS(GetFileAttributesW(a_pszPath));
     }
-    SG_FileType GetFileTypeS(DWORD a_dwAttribs) const {
+    SG_FileType this->GetFileTypeS(DWORD a_dwAttribs) const {
         if (a_dwAttribs == INVALID_FILE_ATTRIBUTES) {
             return SG_FILETYPE_INVALID;
         }
@@ -620,7 +620,7 @@ CSimpleGlobTempl<SOCHAR>::Add(
     if (!SimpleGlobUtil::strchr(a_pszFileSpec, '*') &&
         !SimpleGlobUtil::strchr(a_pszFileSpec, '?'))
     {
-        SG_FileType nType = GetFileTypeS(a_pszFileSpec);
+        SG_FileType nType = this->GetFileTypeS(a_pszFileSpec);
         if (nType == SG_FILETYPE_INVALID) {
             if (m_uiFlags & SG_GLOB_NOCHECK) {
                 return AppendName(a_pszFileSpec, false);
@@ -641,7 +641,7 @@ CSimpleGlobTempl<SOCHAR>::Add(
 #endif
 
     // search for the first match on the file
-    int rc = FindFirstFileS(a_pszFileSpec, m_uiFlags);
+    int rc = this->FindFirstFileS(a_pszFileSpec, m_uiFlags);
     if (rc != SG_SUCCESS) {
         if (rc == SG_ERR_NOMATCH && (m_uiFlags & SG_GLOB_NOCHECK)) {
             int ok = AppendName(a_pszFileSpec, false);
@@ -654,8 +654,8 @@ CSimpleGlobTempl<SOCHAR>::Add(
     int nError, nStartLen = m_nArgsLen;
     bool bSuccess;
     do {
-        nError = AppendName(GetFileNameS((SOCHAR)0), IsDirS((SOCHAR)0));
-        bSuccess = FindNextFileS((SOCHAR)0);
+        nError = AppendName(this->GetFileNameS((SOCHAR)0), this->IsDirS((SOCHAR)0));
+        bSuccess = this->FindNextFileS((SOCHAR)0);
     }
     while (nError == SG_SUCCESS && bSuccess);
     SimpleGlobBase<SOCHAR>::FindDone();

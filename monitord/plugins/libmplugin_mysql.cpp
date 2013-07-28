@@ -3,8 +3,10 @@
 #include <iostream>
 
 #ifdef WIN32
-#define usleep Sleep
-#include <windows.h>
+  #define usleep Sleep
+  #include <windows.h>
+#else
+  #include <unistd.h>
 #endif
 
 

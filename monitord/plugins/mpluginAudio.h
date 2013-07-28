@@ -11,6 +11,7 @@
 #include <time.h>
 
 #ifndef WIN32
+  #include <unistd.h>
 	#define Sleep sleep
 #endif
 
