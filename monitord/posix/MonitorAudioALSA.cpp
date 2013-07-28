@@ -68,7 +68,7 @@ int MonitorAudioALSA::InitDevice() {
 	/* There are also access types for MMAPed */
 	/* access, but this is beyond the scope   */
 	/* of this introduction.                  */
-	ret = snd_pcm_hw_params_set_access(pcm_handle, hwparams, SND_PCM_ACCESS_RW_NONINTERLEAVED);
+	ret = snd_pcm_hw_params_set_access(pcm_handle, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED);
 	if (ret < 0) {
 		LOG_ERROR("[ALSA] Error setting access " <<	pcm_name << ". " << ret <<"(" << snd_strerror(ret)<<")")
 		return -1;
@@ -124,13 +124,27 @@ int MonitorAudioALSA::CloseDevice() {
 
 void* MonitorAudioALSA::Thread() {
 	signed int num_samples;
+	float *temp_buffer;
+	float *left, *right;
+	if ((temp_buffer = (float*) malloc(audio_buffer->SampleLen * sizeof (float) * 2)) == NULL) {
+	LOG_ERROR("cannot allocate temporary audio buffer")
+		exit (-1);
+	}
 
 	JThread::ThreadStarted();
 
 	while(run) {
-		num_samples = snd_pcm_readn(pcm_handle, (void**)audio_buffer->Ptrs, audio_buffer->SampleLen);
+		num_samples = snd_pcm_readi(pcm_handle, temp_buffer, audio_buffer->SampleLen);
 		if (num_samples > 0) {
+			left = audio_buffer->Left;
+			right = audio_buffer->Right;
+			
 			audio_buffer->Samples = num_samples;
+
+			for (tFramecount i=0; i < audio_buffer->Samples; i++) {
+				left[i] = temp_buffer[i*2];
+				right[i] = temp_buffer[i*2+1];
+			}
 
 			DataFromSoundIn(audio_buffer, m_pOwner);
 		} else if (num_samples == -EPIPE) {
