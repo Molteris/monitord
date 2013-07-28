@@ -8,7 +8,7 @@
  */
 
 #include <string>
-#include <vector>
+#include <queue>
 #include <time.h>
 #include <map>
 #include <jthread-1.2.1/src/jthread.h>
@@ -55,7 +55,7 @@ protected:
 } ;
 
 typedef ModuleResultBase* ModuleResultBasePtr ;
-typedef std::vector<ModuleResultBase*> MODULERESULTSET ;
+typedef std::queue<ModuleResultBase*> MODULERESULTSET ;
 
 extern MODULERESULTSET ModuleResultSet ;
 

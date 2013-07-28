@@ -9,6 +9,8 @@
 	#define usleep Sleep
 #endif
 
+#include <errno.h>
+
 #define MAX_QUEUESIZE (100)
 
 PluginThread::PluginThread() : ThreadBase(-1)
@@ -85,11 +87,11 @@ void *PluginThread::Thread()
 		m_signal.WaitForSignal() ;
 		// Daten an Plugin uebergeben
 		memLock(m_Lock) ;
-		while (m_queue.size()>0)
+		while (!m_queue.empty())
 		{
 			LOG_DEBUG("plugin processing - size=" << m_queue.size()) 
-			pRes=m_queue.back() ;
-			m_queue.pop_back() ;
+			pRes=m_queue.front() ;
+			m_queue.pop() ;
 			memUnlock(m_Lock) ;
 
 			/* to avoid a lock caused by a crashed plugin we release our lock*/
@@ -127,7 +129,7 @@ void PluginThread::addResult(ModuleResultBase* pRes)
 	memLock(m_Lock) ;
 	if (m_queue.size()<MAX_QUEUESIZE)
 	{
-		m_queue.insert(m_queue.begin(),localResult) ;
+		m_queue.push(localResult) ;
 	} else {
 		LOG_ERROR("max plugin queue size exceeded. moduleresult not queued") 
 	}

@@ -69,9 +69,9 @@ bool MonitorResultsDispatcher::addResult(ModuleResultBase* pResult)
 	//
 
 	memLock(m_MemLock) ;
-	m_Results.push_back(pResult) ;
-	m_Signal.SetSignal() ;
+	m_Results.push(pResult) ;
 	memUnlock(m_MemLock) ;
+	m_Signal.SetSignal() ;
 	return true ;
 }
 
@@ -92,33 +92,30 @@ void* MonitorResultsDispatcher::Thread()
 		m_Signal.WaitForSignal() ; // Auf neue Daten warten ...
 		LOG_DEBUG("Dispatcher running")
 
-		while (m_Results.size()>0)
+	  m_bSkipDispatching=false ;
+		memLock(m_MemLock) ;
+		while (!m_Results.empty())
 		{
-			m_bSkipDispatching=false ;
-			memLock(m_MemLock) ;
-			for (MODULERESULTSET::iterator i=m_Results.begin(); i<m_Results.end();i++)
+		  LOG_DEBUG("bearbeite ResultSet aus GlobalDispatcher Queue")
+			// Daten holen, verteilen, aus Queue loeschen
+			pRes=m_Results.front() ;
+			LOG_DEBUG("loesche ResultSet aus GlobalDispatcher Queue") 
+			m_Results.pop() ;
+		  memUnlock(m_MemLock) ;
+
+			// Ergebnis an alle SocketServer & Plugins verteilen
+			if (m_bSkipDispatching==false)
 			{
-				LOG_DEBUG("bearbeite ResultSet aus GlobalDispatcher Queue")
-				// Daten holen, verteilen, aus Queue loeschen
-				pRes=*i ;
-
-
-				// Ergebnis an alle SocketServer & Plugins verteilen
-				if (m_bSkipDispatching==false)
-				{
-					GetSocketsManager()->dispatchResult(pRes) ;
-					#ifdef PLUGINS
-					GetPluginsManager().dispatchResult(pRes) ;
-					#endif
-				}
-				// Eintrag aus der Warteschlange loeschen
-				LOG_DEBUG("loesche ResultSet aus GlobalDispatcher Queue") 
-				m_Results.erase(i) ;
-				LOG_DEBUG("delete pRes") 
-				delete pRes ;
-				LOG_DEBUG("delete pRes:done") 
+				GetSocketsManager()->dispatchResult(pRes) ;
+				#ifdef PLUGINS
+				GetPluginsManager().dispatchResult(pRes) ;
+				#endif
 			}
-			memUnlock(m_MemLock) ;
+			// Eintrag aus der Warteschlange loeschen
+			LOG_DEBUG("delete pRes") 
+			delete pRes ;
+			LOG_DEBUG("delete pRes:done") 
+		  memLock(m_MemLock) ;
 		}
 		m_Signal.ResetSignal() ;
 
